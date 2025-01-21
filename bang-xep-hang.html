@@ -123,15 +123,13 @@
                 const existingPlayer = ranking.find(player => player.name === playerName);
 
                 if (existingPlayer) {
-                    existingPlayer.score = Math.max(existingPlayer.score, quizScore);
+                    existingPlayer.score += quizScore;
                 } else {
                     ranking.push({ name: playerName, score: quizScore });
                 }
 
                 ranking.sort((a, b) => b.score - a.score);
-
                 localStorage.setItem('ranking', JSON.stringify(ranking));
-                localStorage.removeItem('quiz_score');
             }
 
             if (ranking.length === 0) {
