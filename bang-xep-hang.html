@@ -110,44 +110,44 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3000/leaderboard'; // URL backend
-
-        async function fetchLeaderboard() {
-            try {
-                const response = await fetch(API_URL);
-                return await response.json();
-            } catch (error) {
-                console.error('Lỗi khi tải bảng xếp hạng:', error);
-                return [];
-            }
-        }
-
-        async function updateLeaderboard() {
+        function updateRanking() {
             const rankingBody = document.getElementById('ranking-body');
             rankingBody.innerHTML = "";
 
-            const playerName = localStorage.getItem('user_name');
-            const quizScore = parseInt(localStorage.getItem('quiz_score'), 10);
+            // Lấy dữ liệu bảng xếp hạng từ localStorage hoặc khởi tạo mảng trống nếu chưa có
+            let ranking = JSON.parse(localStorage.getItem('ranking')) || [];
 
-            // Gửi điểm mới lên server nếu có
+            // Lấy tên người chơi và điểm từ localStorage
+            const playerName = localStorage.getItem('user_name');
+            const quizScore = parseInt(localStorage.getItem('quiz_score'));
+
+            // Nếu có dữ liệu người chơi mới, thêm hoặc cập nhật điểm
             if (playerName && quizScore && quizScore > 0) {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ name: playerName, score: quizScore }),
-                });
+                const existingPlayer = ranking.find(player => player.name === playerName);
+
+                if (existingPlayer) {
+                    // Cập nhật điểm nếu người chơi đã tồn tại
+                    existingPlayer.score = Math.max(existingPlayer.score, quizScore);
+                } else {
+                    // Thêm người chơi mới
+                    ranking.push({ name: playerName, score: quizScore });
+                }
+
+                // Sắp xếp lại bảng xếp hạng theo điểm từ cao đến thấp
+                ranking.sort((a, b) => b.score - a.score);
+
+                // Cập nhật lại bảng xếp hạng vào localStorage
+                localStorage.setItem('ranking', JSON.stringify(ranking));
+
+                // Xóa dữ liệu tạm thời sau khi cập nhật
                 localStorage.removeItem('quiz_score');
             }
 
-            // Lấy bảng xếp hạng từ server
-            const leaderboard = await fetchLeaderboard();
-
-            if (leaderboard.length === 0) {
+            // Hiển thị bảng xếp hạng
+            if (ranking.length === 0) {
                 rankingBody.innerHTML = `<tr><td colspan="3" class="no-data">Không có dữ liệu</td></tr>`;
             } else {
-                leaderboard.forEach((player, index) => {
+                ranking.forEach((player, index) => {
                     rankingBody.innerHTML += `
                         <tr>
                             <td>${index === 0 ? '<i class="fas fa-crown rank-icon"></i>' : index + 1}</td>
@@ -159,7 +159,7 @@
             }
         }
 
-        document.addEventListener("DOMContentLoaded", updateLeaderboard);
+        document.addEventListener("DOMContentLoaded", updateRanking);
     </script>
 </body>
 </html>
