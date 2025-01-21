@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Toán Cấp 1</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: url('https://cdn-media.sforum.vn/storage/app/media/wp-content/uploads/2024/03/background-la-gi-0.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 12px;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 32px;
+            color: #ffcc00;
+        }
+
+        h2 {
+            font-size: 18px;
+            color: #ff99ff;
+        }
+
+        .home-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #ff99ff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            text-align: center;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .home-button:hover {
+            background: #ff66ff;
+            transform: scale(1.05);
+        }
+
+        .question {
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .answers button {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+            padding: 10px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #666;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .answers button:hover {
+            background: #444;
+            transform: scale(1.02);
+        }
+
+        .answers button:disabled {
+            cursor: not-allowed;
+        }
+
+        #result {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .icon {
+            display: inline-block;
+            margin-right: 8px;
+            font-size: 1.2em;
+            color: #ffcc00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-graduation-cap icon"></i>Quiz Toán Cấp 1</h1>
+        <h2 id="playerName"><i class="fas fa-user icon"></i>Chào mừng, <span id="playerNameText">Người chơi</span>!</h2>
+        <a href="index.html" class="home-button"><i class="fas fa-home"></i> Quay về Trang Chủ</a>
+        <div id="quiz"></div>
+        <div id="result"></div>
+    </div>
+    <script>
+        const playerName = localStorage.getItem('user_name') || "Người chơi mới";
+        document.getElementById('playerNameText').innerText = playerName;
+
+        let score = 0;
+
+        async function loadQuestions() {
+            const response = await fetch('kho.html');
+            const text = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, 'text/html');
+            const questions = JSON.parse(doc.getElementById('questionsData').textContent);
+            return questions.sort(() => Math.random() - 0.5).slice(0, 10);
+        }
+
+        async function displayQuestions() {
+            const questions = await loadQuestions();
+            const quizContainer = document.getElementById('quiz');
+            questions.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question');
+                questionDiv.innerHTML = `
+                    <p><i class="fas fa-question-circle icon"></i>Câu ${index + 1}: ${q.question}</p>
+                    <div class="answers">
+                        ${q.answers.map((ans, i) => `
+                            <button onclick="checkAnswer(this, ${i === q.correct})">${ans}</button>
+                        `).join('')}
+                    </div>
+                `;
+                quizContainer.appendChild(questionDiv);
+            });
+        }
+
+        function checkAnswer(button, isCorrect) {
+            if (isCorrect) {
+                score += 10;
+                button.style.backgroundColor = "#4CAF50";
+            } else {
+                button.style.backgroundColor = "#f44336";
+            }
+            const buttons = button.parentElement.querySelectorAll('button');
+            buttons.forEach(btn => btn.disabled = true);
+
+            const allButtons = document.querySelectorAll('.answers button');
+            if (Array.from(allButtons).every(btn => btn.disabled)) {
+                const previousScore = parseInt(localStorage.getItem('quiz_score') || '0');
+                const totalScore = previousScore + score;
+                document.getElementById('result').innerHTML = `<i class="fas fa-star icon"></i>Chúc mừng, ${playerName}! Bạn đã đạt ${score} điểm! Tổng điểm hiện tại: ${totalScore}`;
+                localStorage.setItem('quiz_score', totalScore);
+            }
+        }
+
+        displayQuestions();
+    </script>
+</body>
+</html>
