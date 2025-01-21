@@ -114,36 +114,26 @@
             const rankingBody = document.getElementById('ranking-body');
             rankingBody.innerHTML = "";
 
-            // Lấy dữ liệu bảng xếp hạng từ localStorage hoặc khởi tạo mảng trống nếu chưa có
             let ranking = JSON.parse(localStorage.getItem('ranking')) || [];
 
-            // Lấy tên người chơi và điểm từ localStorage
             const playerName = localStorage.getItem('user_name');
             const quizScore = parseInt(localStorage.getItem('quiz_score'));
 
-            // Nếu có dữ liệu người chơi mới, thêm hoặc cập nhật điểm
             if (playerName && quizScore && quizScore > 0) {
                 const existingPlayer = ranking.find(player => player.name === playerName);
 
                 if (existingPlayer) {
-                    // Cập nhật điểm nếu người chơi đã tồn tại
                     existingPlayer.score = Math.max(existingPlayer.score, quizScore);
                 } else {
-                    // Thêm người chơi mới
                     ranking.push({ name: playerName, score: quizScore });
                 }
 
-                // Sắp xếp lại bảng xếp hạng theo điểm từ cao đến thấp
                 ranking.sort((a, b) => b.score - a.score);
 
-                // Cập nhật lại bảng xếp hạng vào localStorage
                 localStorage.setItem('ranking', JSON.stringify(ranking));
-
-                // Xóa dữ liệu tạm thời sau khi cập nhật
                 localStorage.removeItem('quiz_score');
             }
 
-            // Hiển thị bảng xếp hạng
             if (ranking.length === 0) {
                 rankingBody.innerHTML = `<tr><td colspan="3" class="no-data">Không có dữ liệu</td></tr>`;
             } else {
