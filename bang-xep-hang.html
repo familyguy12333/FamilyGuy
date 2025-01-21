@@ -110,35 +110,44 @@
     </div>
 
     <script>
-        function updateRanking() {
+        const API_URL = 'http://localhost:3000/leaderboard'; // URL backend
+
+        async function fetchLeaderboard() {
+            try {
+                const response = await fetch(API_URL);
+                return await response.json();
+            } catch (error) {
+                console.error('Lỗi khi tải bảng xếp hạng:', error);
+                return [];
+            }
+        }
+
+        async function updateLeaderboard() {
             const rankingBody = document.getElementById('ranking-body');
             rankingBody.innerHTML = "";
 
-            let ranking = JSON.parse(localStorage.getItem('ranking')) || [];
-
             const playerName = localStorage.getItem('user_name');
-            const quizScore = parseInt(localStorage.getItem('quiz_score'));
+            const quizScore = parseInt(localStorage.getItem('quiz_score'), 10);
 
+            // Gửi điểm mới lên server nếu có
             if (playerName && quizScore && quizScore > 0) {
-                const existingPlayer = ranking.find(player => player.name === playerName);
-
-                if (existingPlayer) {
-                    existingPlayer.score += quizScore;
-                } else {
-                    ranking.push({ name: playerName, score: quizScore });
-                }
-
-                ranking.sort((a, b) => b.score - a.score);
-                ranking = ranking.slice(0, 10);
-
-                localStorage.setItem('ranking', JSON.stringify(ranking));
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: playerName, score: quizScore }),
+                });
                 localStorage.removeItem('quiz_score');
             }
 
-            if (ranking.length === 0) {
+            // Lấy bảng xếp hạng từ server
+            const leaderboard = await fetchLeaderboard();
+
+            if (leaderboard.length === 0) {
                 rankingBody.innerHTML = `<tr><td colspan="3" class="no-data">Không có dữ liệu</td></tr>`;
             } else {
-                ranking.forEach((player, index) => {
+                leaderboard.forEach((player, index) => {
                     rankingBody.innerHTML += `
                         <tr>
                             <td>${index === 0 ? '<i class="fas fa-crown rank-icon"></i>' : index + 1}</td>
@@ -150,7 +159,7 @@
             }
         }
 
-        document.addEventListener("DOMContentLoaded", updateRanking);
+        document.addEventListener("DOMContentLoaded", updateLeaderboard);
     </script>
 </body>
 </html>
