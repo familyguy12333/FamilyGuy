@@ -129,7 +129,10 @@
                 }
 
                 ranking.sort((a, b) => b.score - a.score);
+                ranking = ranking.slice(0, 10);
+
                 localStorage.setItem('ranking', JSON.stringify(ranking));
+                localStorage.removeItem('quiz_score');
             }
 
             if (ranking.length === 0) {
